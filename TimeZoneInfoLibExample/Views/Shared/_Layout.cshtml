@@ -1,0 +1,19 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>@ViewBag.Title</title>
+<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/redmond/jquery-ui.css" rel=Stylesheet />
+<link href="/ui/site.css" rel=stylesheet />
+
+@RenderSection("head", false)
+</head>
+
+<body>
+@RenderBody()
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+<script src="/ui/site.js"></script>
+@RenderSection("script", false)
+</body>
+</html>

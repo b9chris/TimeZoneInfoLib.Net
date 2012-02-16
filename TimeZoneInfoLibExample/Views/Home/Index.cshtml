@@ -1,0 +1,116 @@
+﻿@{
+    ViewBag.Title = "TimeZoneInfoLib Example";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section head {
+<style>
+h2 {
+	font: normal 14pt Verdana;
+	padding: 0; margin: 1em 0 .3em 0;
+}
+#date, #time, #date2, #time2 { width: 6em; }
+input.invalid { background: #f00; }
+#state, #country, #state2, #country2, #state3, #country3 { width: 2em; }
+#convertOut, #scOut, #scdOut { height: 1em; }
+</style>
+}
+
+<h2>Convert Dates Between Timezones</h2>
+<div>Convert <input id=date value="2/1/2012"/> <input id=time value="12:00pm"/> <select id=startTz></select> to <select id=destTz></select> <button id=convert>Convert</button></div>
+<div id=convertOut></div>
+
+<h2>Timezone for State and Country</h2>
+Use 2-letter abbreviations, state optional
+<div>State:<input id=state value=CA /> Country:<input id=country value=US /> <button id=scTz>Get Timezone</button></div>
+<div id=scOut></div>
+
+<h2>Convert Dates Between States/Countries</h2>
+Use 2-letter abbreviations, state optional (but required for US and CA)
+<div>From <input id=state2 value=ON />, <input id=country2 value=CA /> on <input id=date2 value="5/6/2012" /> <input id=time2 value="12:00am" /> to <input id=state3 value="" />, <input id=country3 value="CN" /> <button id=scd>Convert</button></div>
+<div id=scdOut></div>
+
+@section script {
+<script>
+function init(timezones) {
+	$('#date, #date2').datepicker();
+
+	var tzOptions = $.map(timezones, function (tz) { return '<option>' + tz + '</option>' }).join('');
+	$('#startTz, #destTz').append(tzOptions);
+
+	$('#convert').click(function (ev) {
+		var data = {
+			d: validateDateTime('#date', '#time'),
+			startTz: selectVal('#startTz'),
+			destTz: selectVal('#destTz')
+		};
+
+		if (!data.d)
+			return;
+
+		post('/home/ConvertDateTime', data, function (r) {
+			var output = $('#convertOut');
+			if (r) {
+				output.text(r);
+			} else {
+				output.text('Not a valid date/time');
+			}
+		});
+	});
+
+	$('#scTz').click(function (ev) {
+		post('/home/ByStateAndCountry', formToObj(['state', 'country']), function (r) {
+			$('#scOut').text(r);
+		});
+	});
+
+	$('#scd').click(function (ev) {
+		var data = formToObj(['state2', 'country2', 'state3', 'country3']);
+		data.d = validateDateTime('#date2', '#time2');
+		if (!data.d)
+			return;
+
+		post('/home/DateTimeByStateAndCountry', data, function (r) {
+			$('#scdOut').text(r);
+		});
+	});
+}
+
+function selectVal(selectId) {
+	var select = $(selectId)[0];
+	return select.options[select.selectedIndex].value;
+}
+
+function mapV(list, fn) {
+	var o = {};
+	$.each(list, function(i, k) {
+		o[k] = fn(k);
+	});
+	return o;
+}
+
+function formToObj(ids) {
+	return mapV(ids, function(id) { return $('#' + id).val(); });
+}
+
+post('/home/TimeZoneDropDownList', null, function (r) {
+	init(r);
+});
+
+function validateDateTime(d, t) {
+	var $d = $(d).removeClass('invalid');
+	var $t = $(t).removeClass('invalid');
+	var ds = $d.val();
+	if (!/^\d\d?\/\d\d?\/\d\d\d\d$/.test(ds)) {
+		$d.addClass('invalid');
+		return null;
+	}
+	var ts = $t.val();
+	if (!/^(\d|10|11|12)\:[0-6]\d(am|pm)$/.test(ts)) {
+		$t.addClass('invalid');
+		return null;
+	}
+	return ds + ' ' + ts;
+}
+</script>
+}
