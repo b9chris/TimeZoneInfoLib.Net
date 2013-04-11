@@ -1,5 +1,5 @@
 ﻿/*
-Copyright 2012 Chris Moschini, Brass Nine Design
+Copyright 2012-2013 Chris Moschini, Brass Nine Design
 
 This code is licensed under the LGPL or MIT license, whichever you prefer.
 */
@@ -12,7 +12,7 @@ namespace Brass9.TimeZone
 	/// <summary>
 	/// A DateTime object in UTC, and a TimeZoneInfo object representing what timezone it's meant to target.
 	/// </summary>
-	public class UtcTimeZone
+	public class DateTimeAndZone
 	{
 		/// <summary>
 		/// The time stored, represented in UTC.
@@ -25,7 +25,7 @@ namespace Brass9.TimeZone
 		public TimeZoneInfo TimeZone { get; set; }
 
 
-		protected UtcTimeZone(DateTime utc, TimeZoneInfo timeZone)
+		protected DateTimeAndZone(DateTime utc, TimeZoneInfo timeZone)
 		{
 			if (utc.Kind == DateTimeKind.Local)
 				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Utc, not Local.", "utc");
@@ -34,44 +34,87 @@ namespace Brass9.TimeZone
 			TimeZone = timeZone;
 		}
 
-		public static UtcTimeZone FromUtc(DateTime utc, TimeZoneInfo timeZone)
+		public static DateTimeAndZone FromUtc(DateTime utc, TimeZoneInfo timeZone)
 		{
 			if (utc.Kind == DateTimeKind.Local)
 				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Utc, not Local.", "utc");
 
-			return new UtcTimeZone(utc, timeZone);
+			return new DateTimeAndZone(utc, timeZone);
 		}
-		public static UtcTimeZone FromUtcAndTimeZoneId(DateTime utc, TimeZoneId timeZoneId)
+		public static DateTimeAndZone FromUtcAndTimeZoneId(DateTime utc, TimeZoneId timeZoneId)
 		{
 			if (utc.Kind == DateTimeKind.Local)
 				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Utc, not Local.", "utc");
 
 			return FromUtc(utc, TimeZoneIdMap.Current.FindSystemTimeZoneById(timeZoneId));
 		}
-		public static UtcTimeZone FromUtcAndShort(DateTime utc, string timezoneShortname)
+
+		/// <summary>
+		/// Returns a DateTimeAndZone no matter what. If timezoneShortname is null or not a real timezone,
+		/// it returns UTC
+		/// </summary>
+		/// <param name="utc"></param>
+		/// <param name="timezoneShortname"></param>
+		/// <returns></returns>
+		public static DateTimeAndZone FromUtcAndShort(DateTime utc, string timezoneShortname)
 		{
 			if (utc.Kind == DateTimeKind.Local)
 				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Utc, not Local.", "utc");
 
-			return FromUtc(utc, TimeZoneShortNameMap.Current.TimeZoneForShortName(timezoneShortname));
+			if (timezoneShortname == null)
+				return new DateTimeAndZone(utc, TimeZoneInfo.Utc);
+
+			var tz = TimeZoneShortNameMap.Current.TimeZoneForShortName(timezoneShortname);
+
+			if (tz == null)
+				return new DateTimeAndZone(utc, TimeZoneInfo.Utc);
+
+			return FromUtc(utc, tz);
 		}
 
-		public static UtcTimeZone FromLocal(DateTime local, TimeZoneInfo timeZone)
+		/// <summary>
+		/// Throws an exception if timezone is bad.
+		/// </summary>
+		/// <param name="utc"></param>
+		/// <param name="timezoneShortname"></param>
+		/// <returns></returns>
+		public static DateTimeAndZone FromUtcAndShortStrict(DateTime utc, string timezoneShortname)
+		{
+			if (utc.Kind == DateTimeKind.Local)
+				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Utc, not Local.", "utc");
+
+			if (timezoneShortname == null)
+				throw new ArgumentNullException("timezoneShortname");
+
+			var tz = TimeZoneShortNameMap.Current.TimeZoneForShortName(timezoneShortname);
+
+			if (tz == null)
+				throw new ArgumentOutOfRangeException("timezoneShortname", timezoneShortname + " is not a mapped timezone.");
+
+			return FromUtc(utc, tz);
+		}
+
+		public static DateTimeAndZone FromLocal(DateTime local, TimeZoneInfo timeZone)
 		{
 			if (local.Kind == DateTimeKind.Utc)
-				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Local, not Utc.", "local");
+				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Unspecified, not Utc.", "local");
 
-			var u = new UtcTimeZone(TimeZoneInfo.ConvertTimeToUtc(local, timeZone), timeZone);
+			// We need to push this date from Local (default for Parse) to Unspecified because it's outside
+			// the limited timezone space the DateTime structure understands (Local, UTC, and go fish)
+			if (local.Kind == DateTimeKind.Local)
+				local = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
+
+			var u = new DateTimeAndZone(TimeZoneInfo.ConvertTimeToUtc(local, timeZone), timeZone);
 			return u;
 		}
-		public static UtcTimeZone FromLocalAndTimeZoneId(DateTime local, TimeZoneId timeZoneId)
+		public static DateTimeAndZone FromLocalAndTimeZoneId(DateTime local, TimeZoneId timeZoneId)
 		{
 			if (local.Kind == DateTimeKind.Utc)
 				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Local, not Utc.", "local");
 
 			return FromLocal(local, TimeZoneIdMap.Current.FindSystemTimeZoneById(timeZoneId));
 		}
-		public static UtcTimeZone FromLocalAndShort(DateTime local, string timezoneShortname)
+		public static DateTimeAndZone FromLocalAndShort(DateTime local, string timezoneShortname)
 		{
 			if (local.Kind == DateTimeKind.Utc)
 				throw new ArgumentException("DateTime utc must be .Kind == DateTimeKind.Local, not Utc.", "local");
@@ -88,7 +131,8 @@ namespace Brass9.TimeZone
 		{
 			get
 			{
-				return TimeZoneInfo.ConvertTimeFromUtc(Utc, this.TimeZone);
+				var local = TimeZoneInfo.ConvertTimeFromUtc(Utc, this.TimeZone);
+				return local;
 			}
 		}
 
@@ -141,17 +185,17 @@ namespace Brass9.TimeZone
 		/// Gets a DateTime object for this time in the requested timezone.
 		/// </summary>
 		/// <param name="shortTz"></param>
-		public void ToLocal(string shortTz)
+		public DateTime ToLocal(string shortTz)
 		{
-			ToLocal(TimeZoneShortNameMap.Current.TimeZoneForShortName(shortTz));
+			return ToLocal(TimeZoneShortNameMap.Current.TimeZoneForShortName(shortTz));
 		}
-		public void ToLocal(TimeZoneId timeZoneId)
+		public DateTime ToLocal(TimeZoneId timeZoneId)
 		{
-			ToLocal(TimeZoneIdMap.Current.FindSystemTimeZoneById(timeZoneId));
+			return ToLocal(TimeZoneIdMap.Current.FindSystemTimeZoneById(timeZoneId));
 		}
-		public void ToLocal(TimeZoneInfo timeZoneInfo)
+		public DateTime ToLocal(TimeZoneInfo timeZoneInfo)
 		{
-			TimeZoneInfo.ConvertTimeFromUtc(Utc, timeZoneInfo);
+			return TimeZoneInfo.ConvertTimeFromUtc(Utc, timeZoneInfo);
 		}
 	}
 }

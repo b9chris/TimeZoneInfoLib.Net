@@ -9,25 +9,26 @@ using Brass9.TimeZone;
 
 namespace TimeZoneInfoLibExample.Controllers
 {
-    public class HomeController : Controller
-    {
-        public ActionResult Index()
-        {
-            return View();
-        }
+	public class HomeController : Controller
+	{
+		public ViewResult Index()
+		{
+			return View();
+		}
 
 		[HttpPost]
-		public ActionResult TimeZoneDropDownList()
+		public JsonResult TimeZoneDropDownList()
 		{
 			List<string> timezones = new List<string>();
 			var tzIds = TimeZoneIdMap.Current.GetKnownTimeZoneIds();
-			foreach (var tzId in tzIds)
-			{
-				string entry = generalShortName(tzId);
-				timezones.Add(entry);
-			}
 
-			return Json(timezones);
+			var tzs = tzIds.Select(t => new
+			{
+				Value = TimeZoneShortNameMap.Current.StandardNameForTimeZoneId(t),
+				Text = generalShortName(t)
+			});
+
+			return Json(tzs);
 		}
 
 		[HttpPost]
@@ -42,26 +43,20 @@ namespace TimeZoneInfoLibExample.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult ConvertDateTime(string d, string startTz, string destTz)
+		public JsonResult ConvertDateTime(string d, string startTz, string destTz)
 		{
 			DateTime dateTime;
 			if (!DateTime.TryParse(d, out dateTime))
 				return Json(null);
 
-			if (startTz.Contains('/'))
-				startTz = startTz.Substring(0, startTz.IndexOf('/'));
-
-			if (destTz.Contains('/'))
-				destTz = destTz.Substring(0, destTz.IndexOf('/'));
-
-			var utcTz = UtcTimeZone.FromLocalAndShort(dateTime, startTz);
+			var utcTz = DateTimeAndZone.FromLocalAndShort(dateTime, startTz);
 			utcTz.SwitchTimeZone(destTz);
 			var dateString = utcTz.Local.ToString("M/d/yyyy h:mmtt").ToLower() + " " + utcTz.TimeZoneShortName;
 			return Json(dateString);
 		}
 
 		[HttpPost]
-		public ActionResult ByStateAndCountry(string state, string country)
+		public JsonResult ByStateAndCountry(string state, string country)
 		{
 			var tzId = TimeZoneByStateAndCountry.Current.GetTimeZoneId(state, country);
 			if (tzId == TimeZoneId.None)
@@ -72,7 +67,7 @@ namespace TimeZoneInfoLibExample.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult DateTimeByStateAndCountry(string d, string state2, string country2, string state3, string country3)
+		public JsonResult DateTimeByStateAndCountry(string d, string state2, string country2, string state3, string country3)
 		{
 			DateTime dateTime;
 			if (!DateTime.TryParse(d, out dateTime))
@@ -81,7 +76,7 @@ namespace TimeZoneInfoLibExample.Controllers
 			var startTz = TimeZoneByStateAndCountry.Current.GetTimeZoneInfo(state2, country2, TimeZoneId.UTC);
 			var destTz = TimeZoneByStateAndCountry.Current.GetTimeZoneInfo(state3, country3, TimeZoneId.UTC);
 
-			var utcTz = UtcTimeZone.FromLocal(dateTime, startTz);
+			var utcTz = DateTimeAndZone.FromLocal(dateTime, startTz);
 			utcTz.SwitchTimeZone(destTz);
 			var dateString = utcTz.Local.ToString("M/d/yyyy h:mmtt").ToLower() + " " + utcTz.TimeZoneShortName;
 
@@ -93,5 +88,5 @@ namespace TimeZoneInfoLibExample.Controllers
 
 			return Json(dateString);
 		}
-    }
+	}
 }

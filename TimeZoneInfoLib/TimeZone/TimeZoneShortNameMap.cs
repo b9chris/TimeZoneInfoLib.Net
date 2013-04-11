@@ -1,5 +1,5 @@
 ﻿/*
-Copyright 2012 Chris Moschini, Brass Nine Design
+Copyright 2012-2013 Chris Moschini, Brass Nine Design
 
 This code is licensed under the LGPL or MIT license, whichever you prefer.
 */
@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 
 namespace Brass9.TimeZone
 {
@@ -118,6 +119,9 @@ namespace Brass9.TimeZone
 
 		public TimeZoneInfo TimeZoneForShortName(string shortName)
 		{
+			if (shortName == null)
+				throw new ArgumentNullException("shortName");
+
 			string timeZoneId = TimeZoneIdStringForShortName(shortName);
 			if (timeZoneId == null)
 				return null;
@@ -126,6 +130,9 @@ namespace Brass9.TimeZone
 
 		public TimeZoneId TimeZoneIdForShortName(string shortName)
 		{
+			if (shortName == null)
+				throw new ArgumentNullException("shortName");
+
 			TimeZoneId timeZoneId = TimeZoneId.None;
 			shortNameToTimeZoneId.TryGetValue(shortName, out timeZoneId);
 			return timeZoneId;

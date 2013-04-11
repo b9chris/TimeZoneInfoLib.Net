@@ -1,5 +1,5 @@
 ﻿/*
-Copyright 2012 Chris Moschini, Brass Nine Design
+Copyright 2012-2013 Chris Moschini, Brass Nine Design
 
 This code is licensed under the LGPL or MIT license, whichever you prefer.
 */
@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 
 namespace Brass9.TimeZone
 {
@@ -215,18 +216,18 @@ namespace Brass9.TimeZone
 			return TimeZoneInfo.FindSystemTimeZoneById(TimeZoneIdMap.Current.IdToString(timeZoneId));
 		}
 
-		public UtcTimeZone GetUtcTimeZone(DateTime local, string state, string country)
+		public DateTimeAndZone GetUtcTimeZone(DateTime local, string state, string country)
 		{
 			var timeZone = GetTimeZoneInfo(state, country);
 			if (timeZone == null)
 				return null;
-			return UtcTimeZone.FromLocal(local, timeZone);
+			return DateTimeAndZone.FromLocal(local, timeZone);
 		}
 
-		public UtcTimeZone GetUtcTimeZone(DateTime local, string state, string country, TimeZoneId defaultTimeZoneId)
+		public DateTimeAndZone GetUtcTimeZone(DateTime local, string state, string country, TimeZoneId defaultTimeZoneId)
 		{
 			var timeZone = GetTimeZoneInfo(state, country, defaultTimeZoneId);
-			return UtcTimeZone.FromLocal(local, timeZone);
+			return DateTimeAndZone.FromLocal(local, timeZone);
 		}
 	}
 }

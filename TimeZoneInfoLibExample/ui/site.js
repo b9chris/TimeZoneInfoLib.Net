@@ -1,10 +1,9 @@
-﻿function post(url, data, success, error) {
-	$.ajax({
+function post(url, data) {
+	return $.ajax({
 		url: url,
+
 		data: data,
 		type: 'POST',
 		dataType: 'json',
-		success: success,
-		error: error
 	});
 }

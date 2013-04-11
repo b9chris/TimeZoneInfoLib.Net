@@ -1,6 +1,6 @@
 ﻿@{
-    ViewBag.Title = "TimeZoneInfoLib Example";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+	ViewBag.Title = "TimeZoneInfoLib Example";
+	Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 @section head {
@@ -35,7 +35,7 @@ Use 2-letter abbreviations, state optional (but required for US and CA)
 function init(timezones) {
 	$('#date, #date2').datepicker();
 
-	var tzOptions = $.map(timezones, function (tz) { return '<option>' + tz + '</option>' }).join('');
+	var tzOptions = $.map(timezones, function (tz) { return '<option value=' + tz.Value + '>' + tz.Text + '</option>' }).join('');
 	$('#startTz, #destTz').append(tzOptions);
 
 	$('#convert').click(function (ev) {
@@ -44,22 +44,24 @@ function init(timezones) {
 			startTz: selectVal('#startTz'),
 			destTz: selectVal('#destTz')
 		};
-
+		
 		if (!data.d)
 			return;
-
-		post('/home/ConvertDateTime', data, function (r) {
+		
+		post('/home/ConvertDateTime', data)
+		.done(function (r) {
 			var output = $('#convertOut');
 			if (r) {
 				output.text(r);
 			} else {
 				output.text('Not a valid date/time');
 			}
-		});
+		}).fail(function(x) {debugger;});
 	});
 
 	$('#scTz').click(function (ev) {
-		post('/home/ByStateAndCountry', formToObj(['state', 'country']), function (r) {
+		post('/home/ByStateAndCountry', formToObj(['state', 'country']))
+		.done(function (r) {
 			$('#scOut').text(r);
 		});
 	});
@@ -70,7 +72,8 @@ function init(timezones) {
 		if (!data.d)
 			return;
 
-		post('/home/DateTimeByStateAndCountry', data, function (r) {
+		post('/home/DateTimeByStateAndCountry', data)
+		.done(function (r) {
 			$('#scdOut').text(r);
 		});
 	});
@@ -93,7 +96,8 @@ function formToObj(ids) {
 	return mapV(ids, function(id) { return $('#' + id).val(); });
 }
 
-post('/home/TimeZoneDropDownList', null, function (r) {
+post('/home/TimeZoneDropDownList', null)
+.done(function (r) {
 	init(r);
 });
 

@@ -8,7 +8,7 @@
     <ProjectGuid>{3DEEA2CC-6F74-4A3A-A763-1A07ED3AFCAB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TimeZoneInfoLib</RootNamespace>
+    <RootNamespace>Brass9</RootNamespace>
     <AssemblyName>TimeZoneInfoLib</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -40,13 +40,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DateTimeHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringValueAttribute.cs" />
     <Compile Include="TimeZone\TimeZoneId.cs" />
     <Compile Include="TimeZone\TimeZoneIdMap.cs" />
     <Compile Include="TimeZone\TimeZoneByStateAndCountry.cs" />
     <Compile Include="TimeZone\TimeZoneShortNameMap.cs" />
-    <Compile Include="TimeZone\UtcTimeZone.cs" />
+    <Compile Include="TimeZone\DateTimeAndZone.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

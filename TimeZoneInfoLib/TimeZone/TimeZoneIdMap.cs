@@ -1,5 +1,5 @@
 ﻿/*
-Copyright 2012 Chris Moschini, Brass Nine Design
+Copyright 2012-2013 Chris Moschini, Brass Nine Design
 
 This code is licensed under the LGPL or MIT license, whichever you prefer.
 */
